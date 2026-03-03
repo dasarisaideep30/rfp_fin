@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "build": "npm install --prefix backend && npx prisma generate --schema=backend/prisma/schema.prisma && npm install --prefix frontend && npm run build --prefix frontend",
+        "build": "npm install --prefix backend && npx prisma@6.19.2 generate --schema=backend/prisma/schema.prisma && npm install --prefix frontend && npm run build --prefix frontend",
         "vercel-build": "npm run build"
     }
 }
