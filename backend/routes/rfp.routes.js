@@ -16,21 +16,21 @@ router.get('/', rfpController.getAllRFPs);
 // GET single RFP
 router.get('/:id', rfpController.getRFPById);
 
-// POST create RFP (Proposal Managers only)
-router.post('/', 
-  authorize('PROPOSAL_MANAGER'), 
+// POST create RFP (Proposal Managers and Solution Architects)
+router.post('/',
+  authorize('PROPOSAL_MANAGER', 'SOLUTION_ARCHITECT'),
   rfpController.createRFP
 );
 
 // PATCH update RFP
-router.patch('/:id', 
-  authorize('PROPOSAL_MANAGER', 'SOLUTION_ARCHITECT', 'BID_REVIEWER'), 
+router.patch('/:id',
+  authorize('PROPOSAL_MANAGER', 'SOLUTION_ARCHITECT', 'BID_REVIEWER'),
   rfpController.updateRFP
 );
 
 // DELETE RFP (Proposal Managers only)
-router.delete('/:id', 
-  authorize('PROPOSAL_MANAGER'), 
+router.delete('/:id',
+  authorize('PROPOSAL_MANAGER'),
   rfpController.deleteRFP
 );
 

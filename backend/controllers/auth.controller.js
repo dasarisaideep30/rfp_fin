@@ -49,7 +49,7 @@ const register = async (req, res) => {
 
     // Validate role
     const validRoles = ['PROPOSAL_MANAGER', 'SOLUTION_ARCHITECT', 'LEADERSHIP', 'BID_REVIEWER'];
-    const userRole = role || 'SOLUTION_ARCHITECT';
+    const userRole = role || 'PROPOSAL_MANAGER';
 
     if (!validRoles.includes(userRole)) {
       return res.status(400).json({

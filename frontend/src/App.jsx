@@ -1555,7 +1555,10 @@ const AppLayout = () => {
             <RFPDetail rfpId={selectedRFPId} onBack={handleBackToList} onUpdate={fetchInitialData} />
           )}
           {currentView === 'create-rfp' && (
-            <CreateRFPForm onCancel={handleBackToList} onSuccess={fetchInitialData} />
+            <CreateRFPForm onCancel={handleBackToList} onSuccess={() => {
+              fetchInitialData();
+              handleRFPCreated();
+            }} />
           )}
           {currentView === 'settings' && (
             <SettingsView />
