@@ -425,6 +425,7 @@ const RFPList = ({ initialRfps, loading: propLoading, onViewRFP, onCreateRFP, on
   const [rfps, setRfps] = useState(initialRfps || []);
   const [loading, setLoading] = useState(!initialRfps);
   const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState('ALL'); // ALL, RISK:RED, RISK:AMBER, STATUS:IN_PROGRESS, STATUS:REVIEW
 
   useEffect(() => {
     if (initialRfps && !search) {
@@ -477,10 +478,28 @@ const RFPList = ({ initialRfps, loading: propLoading, onViewRFP, onCreateRFP, on
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="btn btn-secondary" style={{ gap: '8px' }}>
-            <Filter size={18} />
-            Filter
-          </button>
+          <div style={{ position: 'relative' }}>
+            <select 
+              className="form-select" 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              style={{ appearance: 'none', paddingRight: '2rem', minWidth: '150px' }}
+            >
+              <option value="ALL">All RFPs</option>
+              <optgroup label="By Risk">
+                <option value="RISK:RED">High Risk (Red)</option>
+                <option value="RISK:AMBER">Medium Risk (Amber)</option>
+                <option value="RISK:GREEN">Low Risk (Green)</option>
+              </optgroup>
+              <optgroup label="By Status">
+                <option value="STATUS:INTAKE">Intake</option>
+                <option value="STATUS:PLANNING">Planning</option>
+                <option value="STATUS:IN_PROGRESS">In Progress</option>
+                <option value="STATUS:REVIEW">Review</option>
+              </optgroup>
+            </select>
+            <Filter size={16} color="#64748b" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          </div>
         </div>
       </div>
 
@@ -513,32 +532,52 @@ const RFPList = ({ initialRfps, loading: propLoading, onViewRFP, onCreateRFP, on
                   </td>
                 </tr>
               ) : (
-                rfps.map((rfp) => (
-                  <tr key={rfp.id} onClick={() => onViewRFP(rfp.id)} style={{ cursor: 'pointer' }} className="table-row-hover">
-                    <td style={{ fontWeight: 700, color: '#0f172a' }}>{rfp.projectTitle}</td>
-                    <td style={{ color: '#475569' }}>{rfp.clientName}</td>
-                    <td style={{ fontWeight: 700, color: '#10b981' }}>${(rfp.estimatedDealValue / 1000000).toFixed(1)}M</td>
-                    <td style={{ color: '#475569' }}>{new Date(rfp.submissionDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                    <td>
-                      <span className={`status-badge status-${rfp.status.toLowerCase()}`}>
-                        {rfp.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`risk-badge risk-${rfp.riskLevel.toLowerCase()}`}>
-                        {rfp.riskLevel}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '28px', height: '28px', background: '#eff6ff', color: '#2563eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #dbeafe' }}>
-                          {rfp.proposalManager?.firstName?.[0] || 'U'}
+                (() => {
+                  const filteredList = rfps.filter(rfp => {
+                    if (filterType === 'ALL') return true;
+                    if (filterType.startsWith('RISK:')) return rfp.riskLevel === filterType.split(':')[1];
+                    if (filterType.startsWith('STATUS:')) return rfp.status === filterType.split(':')[1];
+                    return true;
+                  });
+
+                  if (filteredList.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: '5rem 2rem', color: '#64748b' }}>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>No RFPs match criteria</div>
+                          <p>Try adjusting your search or filter settings.</p>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return filteredList.map((rfp) => (
+                    <tr key={rfp.id} onClick={() => onViewRFP(rfp.id)} style={{ cursor: 'pointer' }} className="table-row-hover">
+                      <td style={{ fontWeight: 700, color: '#0f172a' }}>{rfp.projectTitle}</td>
+                      <td style={{ color: '#475569' }}>{rfp.clientName}</td>
+                      <td style={{ fontWeight: 700, color: '#10b981' }}>${(rfp.estimatedDealValue / 1000000).toFixed(1)}M</td>
+                      <td style={{ color: '#475569' }}>{new Date(rfp.submissionDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                      <td>
+                        <span className={`status-badge status-${rfp.status.toLowerCase()}`}>
+                          {rfp.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`risk-badge risk-${rfp.riskLevel.toLowerCase()}`}>
+                          {rfp.riskLevel}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '28px', height: '28px', background: '#eff6ff', color: '#2563eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #dbeafe' }}>
+                            {rfp.proposalManager?.firstName?.[0] || 'U'}
+                          </div>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{rfp.proposalManager?.firstName || 'Unknown'}</span>
                         </div>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{rfp.proposalManager?.firstName || 'Unknown'}</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  ));
+                })()
               )}
             </tbody>
           </table>
@@ -653,6 +692,23 @@ const RFPDetail = ({ rfpId, onBack }) => {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* AI Action Area */}
+            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(145deg, #1e1b4b, #312e81)', borderRadius: '0.75rem', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h4 style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.25rem' }}>✨</span> Enterprise AI Intelligence
+                </h4>
+                <p style={{ color: '#c7d2fe', fontSize: '0.9rem' }}>Automatically summarize large 150+ page documents, or elaborate short requests into full proposals.</p>
+              </div>
+              <button 
+                className="btn btn-primary" 
+                style={{ background: 'white', color: '#312e81', fontWeight: 800, border: 'none', padding: '0.75rem 1.5rem' }}
+                onClick={() => alert('AI Analysis requires an uploaded document buffer. This triggers the /api/ai/analyze-rfp endpoint using Gemini 1.5 Pro.')}
+              >
+                Analyze Document
+              </button>
             </div>
           </div>
 

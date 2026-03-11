@@ -16,6 +16,7 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const approvalRoutes = require('./routes/approval.routes');
 const activityRoutes = require('./routes/activity.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const aiRoutes = require('./routes/ai.routes');
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Fallback routes (in case /api is stripped by proxy/redirect)
 app.use('/auth', authRoutes);
@@ -78,6 +80,7 @@ app.use('/dashboard', dashboardRoutes);
 app.use('/approvals', approvalRoutes);
 app.use('/activities', activityRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/ai', aiRoutes);
 
 // ============================================
 // ERROR HANDLING
