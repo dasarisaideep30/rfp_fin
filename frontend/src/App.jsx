@@ -765,8 +765,61 @@ const RFPDetail = ({ rfpId, onBack }) => {
     }
   };
 
+  const handleUpdateStatus = async (newStatus) => {
+    if (!rfp) return;
+    
+    const oldStatus = rfp.status;
+    const oldActivity = [...(rfp.activityLogs || [])];
+    
+    // Optimistic Update
+    setRfp(prev => ({ 
+      ...prev, 
+      status: newStatus,
+      activityLogs: [
+        { 
+          id: 'temp-' + Date.now(), 
+          action: 'RFP_UPDATED', 
+          description: `Status updated to ${newStatus} (Syncing...)`, 
+          createdAt: new Date().toISOString(),
+          user: { firstName: 'You' }
+        },
+        ...oldActivity
+      ]
+    }));
+
+    try {
+      await apiCall(`/rfps/${rfpId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus })
+      }, token);
+      
+      // Background refresh to get server-calculated fields (risk, description, etc)
+      const data = await apiCall(`/rfps/${rfpId}`, {}, token);
+      setRfp(data.rfp);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      // Rollback
+      setRfp(prev => ({ ...prev, status: oldStatus, activityLogs: oldActivity }));
+      alert('Failed to update RFP status. Please check your connection.');
+    }
+  };
+
   if (loading) {
-    return <div className="loading"><div className="spinner"></div></div>;
+    return (
+      <div style={{ animation: 'fadeIn 0.3s' }}>
+        <div className="skeleton skeleton-title" style={{ width: '40%', height: '40px' }}></div>
+        <div className="dashboard-sections">
+          <div>
+            <div className="skeleton" style={{ height: '400px', width: '100%', marginBottom: '2rem' }}></div>
+            <div className="skeleton" style={{ height: '300px', width: '100%' }}></div>
+          </div>
+          <div>
+            <div className="skeleton" style={{ height: '200px', width: '100%', marginBottom: '2.5rem' }}></div>
+            <div className="skeleton" style={{ height: '400px', width: '100%' }}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!rfp) {
@@ -1700,6 +1753,7 @@ const AppLayout = () => {
 
   const fetchInitialData = async () => {
     try {
+      // Background revalidation: fetch everything but don't show global spinner if we already have some data
       const [dash, rfps, tasks, notify] = await Promise.all([
         apiCall('/dashboard/executive', {}, token),
         apiCall('/rfps', {}, token),
@@ -1711,25 +1765,31 @@ const AppLayout = () => {
       setTasksData(tasks.tasks);
       setUnreadCount(notify.unreadCount || 0);
     } catch (error) {
-      console.error('Failed to pre-fetch data:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setDataLoading(false);
     }
   };
 
   const refreshDashboard = async () => {
-    const dash = await apiCall('/dashboard/executive', {}, token);
-    setDashboardData(dash);
+    try {
+      const dash = await apiCall('/dashboard/executive', {}, token);
+      setDashboardData(dash);
+    } catch (e) {}
   };
 
   const refreshRFPs = async () => {
-    const rfps = await apiCall('/rfps', {}, token);
-    setRfpsData(rfps.rfps);
+    try {
+      const rfps = await apiCall('/rfps', {}, token);
+      setRfpsData(rfps.rfps);
+    } catch (e) {}
   };
 
   const refreshTasks = async () => {
-    const tasks = await apiCall('/tasks', {}, token);
-    setTasksData(tasks.tasks);
+    try {
+      const tasks = await apiCall('/tasks', {}, token);
+      setTasksData(tasks.tasks);
+    } catch (e) {}
   };
 
   const navigation = [

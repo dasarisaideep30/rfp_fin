@@ -45,18 +45,16 @@ const getAllRFPs = async (req, res) => {
       where: {
         AND: filters
       },
-      include: {
+      select: {
+        id: true,
+        projectTitle: true,
+        clientName: true,
+        estimatedDealValue: true,
+        submissionDeadline: true,
+        status: true,
+        riskLevel: true,
         proposalManager: {
-          select: { id: true, firstName: true, lastName: true, email: true }
-        },
-        solutionArchitect: {
-          select: { id: true, firstName: true, lastName: true, email: true }
-        },
-        tasks: {
-          select: { id: true, status: true }
-        },
-        milestones: {
-          select: { id: true, isCompleted: true }
+          select: { firstName: true }
         }
       },
       orderBy: { createdAt: 'desc' }
