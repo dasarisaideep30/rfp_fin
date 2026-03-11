@@ -195,8 +195,54 @@ const getProfile = async (req, res) => {
   }
 };
 
+/**
+ * Update user profile
+ * PATCH /api/auth/profile
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName } = req.body;
+    const userId = req.user.id;
+
+    if (!firstName && !lastName) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'At least one field (firstName or lastName) is required'
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName })
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        updatedAt: true
+      }
+    });
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      error: 'Failed to update profile'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  updateProfile
 };

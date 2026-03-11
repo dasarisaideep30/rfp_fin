@@ -1,0 +1,9 @@
+frontend/
+frontend/node_modules/
+.git/
+.gemini/
+brain/
+tests/
+prisma/seed.js
+docs/
+*.md

@@ -15,46 +15,46 @@ const getAllRFPs = async (req, res) => {
   try {
     const { status, riskLevel, search } = req.query;
     const userId = req.user.id;
-    let where = {};
+    const isAdmin = req.user.role === 'ADMIN';
     
-    // Only the master admin sees all RFPs
-    if (req.user.email !== 'sarah.johnson@gmail.com') {
-      // Everyone else only sees what they are assigned to or manage
-      where.OR = [
-        { proposalManagerId: userId },
-        { solutionArchitectId: userId }
-      ];
-    }
+    // Privacy conditions: strictly RFPs created by the user (proposalManagerId) unless Admin
+    const privacyConditions = isAdmin ? {} : { proposalManagerId: userId };
+    
+    // Build filter array for AND grouping
+    const filters = [privacyConditions];
 
-    // Apply filters
     if (status) {
-      where.status = status;
+      filters.push({ status });
     }
+    
     if (riskLevel) {
-      where.riskLevel = riskLevel;
+      filters.push({ riskLevel });
     }
+    
     if (search) {
-      where.OR = [
-        { clientName: { contains: search, mode: 'insensitive' } },
-        { rfpNumber: { contains: search, mode: 'insensitive' } },
-        { projectTitle: { contains: search, mode: 'insensitive' } }
-      ];
+      filters.push({
+        OR: [
+          { clientName: { contains: search, mode: 'insensitive' } },
+          { rfpNumber: { contains: search, mode: 'insensitive' } },
+          { projectTitle: { contains: search, mode: 'insensitive' } }
+        ]
+      });
     }
 
     const rfps = await prisma.rFP.findMany({
-      where,
-      include: {
+      where: {
+        AND: filters
+      },
+      select: {
+        id: true,
+        projectTitle: true,
+        clientName: true,
+        estimatedDealValue: true,
+        submissionDeadline: true,
+        status: true,
+        riskLevel: true,
         proposalManager: {
-          select: { id: true, firstName: true, lastName: true, email: true }
-        },
-        solutionArchitect: {
-          select: { id: true, firstName: true, lastName: true, email: true }
-        },
-        tasks: {
-          select: { id: true, status: true }
-        },
-        milestones: {
-          select: { id: true, isCompleted: true }
+          select: { firstName: true }
         }
       },
       orderBy: { createdAt: 'desc' }

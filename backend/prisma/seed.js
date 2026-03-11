@@ -35,7 +35,7 @@ async function main() {
         password: hashedPassword,
         firstName: 'Sarah',
         lastName: 'Johnson',
-        role: 'PROPOSAL_MANAGER'
+        role: 'ADMIN'
       }
     })
   ]);

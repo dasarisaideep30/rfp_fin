@@ -426,6 +426,7 @@ const RFPList = ({ initialRfps, loading: propLoading, onViewRFP, onCreateRFP, on
   const [loading, setLoading] = useState(!initialRfps);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('ALL'); // ALL, RISK:*, STATUS:*, DATE:*
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (initialRfps && !search) {
@@ -479,30 +480,168 @@ const RFPList = ({ initialRfps, loading: propLoading, onViewRFP, onCreateRFP, on
             />
           </div>
           <div style={{ position: 'relative' }}>
-            <select 
-              className="form-select" 
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              style={{ appearance: 'none', paddingRight: '2rem', minWidth: '150px' }}
+            <button 
+              className="btn btn-secondary" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowFilters(!showFilters);
+              }}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                padding: '0.75rem 1.5rem', 
+                border: '1px solid #e2e8f0', 
+                background: 'white', 
+                fontWeight: 800,
+                borderRadius: '10px',
+                boxShadow: showFilters ? '0 0 0 2px #dbeafe' : 'none',
+                transition: 'all 0.2s ease'
+              }}
             >
-              <option value="ALL">All RFPs</option>
-              <optgroup label="By Risk">
-                <option value="RISK:RED">High Risk (Red)</option>
-                <option value="RISK:AMBER">Medium Risk (Amber)</option>
-                <option value="RISK:GREEN">Low Risk (Green)</option>
-              </optgroup>
-              <optgroup label="By Status">
-                <option value="STATUS:INTAKE">Intake</option>
-                <option value="STATUS:PLANNING">Planning</option>
-                <option value="STATUS:IN_PROGRESS">In Progress</option>
-                <option value="STATUS:REVIEW">Review</option>
-              </optgroup>
-              <optgroup label="By Deadline">
-                <option value="DATE:UPCOMING">Upcoming (Next 30 Days)</option>
-                <option value="DATE:PAST">Past Deadline</option>
-              </optgroup>
-            </select>
-            <Filter size={16} color="#64748b" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <Filter size={18} />
+              Filter Options
+            </button>
+
+            {showFilters && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 12px)',
+                right: 0,
+                background: 'white',
+                borderRadius: '16px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                padding: '1.75rem',
+                minWidth: '350px',
+                zIndex: 1000,
+                border: '1px solid #f1f5f9',
+                animation: 'slideUp 0.3s ease-out'
+              }} onClick={e => e.stopPropagation()}>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  {/* Column 1 */}
+                  <div>
+                    <div style={{ marginBottom: '1.75rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.1em' }}>Risk Profile</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        {['ALL', 'GREEN', 'AMBER', 'RED'].map(lvl => (
+                          <button 
+                            key={lvl}
+                            onClick={() => setFilterType(lvl === 'ALL' ? 'ALL' : `RISK:${lvl}`)}
+                            style={{
+                              textAlign: 'left',
+                              padding: '0.65rem 1rem',
+                              borderRadius: '8px',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              border: '1px solid',
+                              borderColor: (filterType === lvl || filterType === `RISK:${lvl}`) ? '#2563eb' : 'transparent',
+                              background: (filterType === lvl || filterType === `RISK:${lvl}`) ? '#eff6ff' : 'transparent',
+                              color: (filterType === lvl || filterType === `RISK:${lvl}`) ? '#2563eb' : '#64748b',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <span style={{ 
+                              display: 'inline-block', 
+                              width: '10px', 
+                              height: '10px', 
+                              borderRadius: '50%', 
+                              marginRight: '10px',
+                              background: lvl === 'GREEN' ? '#10b981' : lvl === 'AMBER' ? '#f59e0b' : lvl === 'RED' ? '#ef4444' : '#cbd5e1'
+                            }}></span>
+                            {lvl === 'ALL' ? 'All Risks' : lvl}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.1em' }}>Timeframe</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {['Last 30 Days', 'This Quarter', 'Next 12 Months'].map(time => (
+                          <button 
+                            key={time}
+                            onClick={() => setFilterType(`DATE:${time}`)}
+                            style={{
+                              textAlign: 'left',
+                              padding: '0.5rem 0.75rem',
+                              borderRadius: '6px',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              border: 'none',
+                              background: filterType === `DATE:${time}` ? '#f1f5f9' : 'transparent',
+                              color: filterType === `DATE:${time}` ? '#0f172a' : '#64748b'
+                            }}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2 */}
+                  <div>
+                    <div style={{ marginBottom: '1.75rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.1em' }}>Stage / Status</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {['INTAKE', 'PLANNING', 'IN_PROGRESS', 'REVIEW', 'SUBMITTED', 'APPROVED', 'REJECTED'].map(st => (
+                          <button 
+                            key={st}
+                            onClick={() => setFilterType(`STATUS:${st}`)}
+                            style={{
+                              textAlign: 'left',
+                              padding: '0.5rem 0.75rem',
+                              borderRadius: '6px',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              border: 'none',
+                              background: filterType === `STATUS:${st}` ? '#f1f5f9' : 'transparent',
+                              color: filterType === `STATUS:${st}` ? '#0f172a' : '#64748b'
+                            }}
+                          >
+                            {st.replace('_', ' ')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.1em' }}>Verticals</label>
+                      <select 
+                        onChange={(e) => setFilterType(`INDUSTRY:${e.target.value}`)}
+                        className="form-select"
+                        style={{ padding: '0.5rem', fontSize: '0.85rem', fontWeight: 700 }}
+                      >
+                        <option value="">All Industries</option>
+                        <option value="Financial Services">Financial Services</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => { setFilterType('ALL'); setShowFilters(false); }}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    Clear All
+                  </button>
+                  <button 
+                    onClick={() => setShowFilters(false)}
+                    className="btn btn-primary"
+                    style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem' }}
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -626,8 +765,61 @@ const RFPDetail = ({ rfpId, onBack }) => {
     }
   };
 
+  const handleUpdateStatus = async (newStatus) => {
+    if (!rfp) return;
+    
+    const oldStatus = rfp.status;
+    const oldActivity = [...(rfp.activityLogs || [])];
+    
+    // Optimistic Update
+    setRfp(prev => ({ 
+      ...prev, 
+      status: newStatus,
+      activityLogs: [
+        { 
+          id: 'temp-' + Date.now(), 
+          action: 'RFP_UPDATED', 
+          description: `Status updated to ${newStatus} (Syncing...)`, 
+          createdAt: new Date().toISOString(),
+          user: { firstName: 'You' }
+        },
+        ...oldActivity
+      ]
+    }));
+
+    try {
+      await apiCall(`/rfps/${rfpId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus })
+      }, token);
+      
+      // Background refresh to get server-calculated fields (risk, description, etc)
+      const data = await apiCall(`/rfps/${rfpId}`, {}, token);
+      setRfp(data.rfp);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      // Rollback
+      setRfp(prev => ({ ...prev, status: oldStatus, activityLogs: oldActivity }));
+      alert('Failed to update RFP status. Please check your connection.');
+    }
+  };
+
   if (loading) {
-    return <div className="loading"><div className="spinner"></div></div>;
+    return (
+      <div style={{ animation: 'fadeIn 0.3s' }}>
+        <div className="skeleton skeleton-title" style={{ width: '40%', height: '40px' }}></div>
+        <div className="dashboard-sections">
+          <div>
+            <div className="skeleton" style={{ height: '400px', width: '100%', marginBottom: '2rem' }}></div>
+            <div className="skeleton" style={{ height: '300px', width: '100%' }}></div>
+          </div>
+          <div>
+            <div className="skeleton" style={{ height: '200px', width: '100%', marginBottom: '2.5rem' }}></div>
+            <div className="skeleton" style={{ height: '400px', width: '100%' }}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!rfp) {
@@ -776,9 +968,34 @@ const RFPDetail = ({ rfpId, onBack }) => {
 
             <div style={{ marginBottom: '2rem' }}>
               <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Current Status</div>
-              <span className={`status-badge status-${rfp.status.toLowerCase()}`} style={{ fontSize: '0.85rem', padding: '0.6rem 1.25rem' }}>
-                {rfp.status.replace('_', ' ')}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <span className={`status-badge status-${rfp.status.toLowerCase()}`} style={{ fontSize: '0.85rem', padding: '0.6rem 1.25rem' }}>
+                  {rfp.status.replace('_', ' ')}
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ background: '#10b981', borderColor: '#10b981', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                    onClick={() => handleUpdateStatus('APPROVED')}
+                  >
+                    Approve
+                  </button>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                    onClick={() => handleUpdateStatus('REJECTED')}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+              <button 
+                className="btn btn-secondary" 
+                style={{ width: '100%', marginTop: '1rem', fontSize: '0.85rem', color: '#64748b' }} 
+                onClick={() => handleUpdateStatus('SUBMITTED')}
+              >
+                Submit Proposal
+              </button>
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
@@ -1018,16 +1235,34 @@ const CreateRFPForm = ({ onCancel, onSuccess }) => {
             </button>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Executive Summary</label>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Executive Summary 
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={handleAIGenerate}
+                disabled={aiGenerating}
+                style={{ 
+                  padding: '0.4rem 0.8rem', 
+                  fontSize: '0.75rem', 
+                  gap: '6px', 
+                  color: '#7c3aed', 
+                  borderColor: '#ddd6fe',
+                  background: '#f5f3ff'
+                }}
+              >
+                <Zap size={14} fill="#7c3aed" />
+                {aiGenerating ? 'AI Analyzing...' : 'Magic Autofill'}
+              </button>
+            </label>
             <textarea
               name="executiveSummary"
               className="form-textarea"
-              placeholder="The summarized (or elaborated) proposal will appear here..."
-              rows="10"
+              placeholder="Briefly describe the proposal goals and solution approach..."
               value={formData.executiveSummary}
               onChange={handleChange}
-              style={{ height: 'calc(100% - 28px)' }}
+              style={{ minHeight: '150px' }}
             />
           </div>
         </div>
@@ -1399,7 +1634,31 @@ const Dashboard = ({ data: propData, loading: propLoading, onRefresh }) => {
   );
 };
 const SettingsView = () => {
-  const { user } = useAuth();
+  const { user, token, logout } = useAuth();
+  const [firstName, setFirstName] = useState(user?.firstName || '');
+  const [lastName, setLastName] = useState(user?.lastName || '');
+  const [updating, setUpdating] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    setMessage({ type: '', text: '' });
+    try {
+      await apiCall('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ firstName, lastName })
+      }, token);
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      // In a real app, we'd update the global user state here. 
+      // For this demo, we'll suggest a refresh or assume the parent re-fetches.
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to update profile.' });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '900px' }}>
       <div style={{ marginBottom: '3rem' }}>
@@ -1407,20 +1666,35 @@ const SettingsView = () => {
         <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Manage your account and preferences</p>
       </div>
 
-      <div className="card" style={{ marginBottom: '2rem' }}>
+      <form onSubmit={handleUpdateProfile} className="card" style={{ marginBottom: '2rem' }}>
         <h3 style={{ fontWeight: 800, marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>Profile Settings</h3>
+        
+        {message.text && (
+          <div style={{ 
+            padding: '1rem', 
+            borderRadius: '8px', 
+            marginBottom: '1.5rem',
+            background: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+            color: message.type === 'success' ? '#166534' : '#991b1b',
+            border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+            fontWeight: 600
+          }}>
+            {message.text}
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
           <div className="form-group">
             <label className="form-label">First Name</label>
-            <input type="text" className="form-input" value={user?.firstName} disabled style={{ fontWeight: 600 }} />
+            <input type="text" className="form-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={{ fontWeight: 600 }} />
           </div>
           <div className="form-group">
             <label className="form-label">Last Name</label>
-            <input type="text" className="form-input" value={user?.lastName} disabled style={{ fontWeight: 600 }} />
+            <input type="text" className="form-input" value={lastName} onChange={(e) => setLastName(e.target.value)} style={{ fontWeight: 600 }} />
           </div>
           <div className="form-group" style={{ gridColumn: 'span 2' }}>
             <label className="form-label">Email Address</label>
-            <input type="email" className="form-input" value={user?.email} disabled style={{ fontWeight: 600 }} />
+            <input type="email" className="form-input" value={user?.email} disabled style={{ fontWeight: 600, background: '#f8fafc' }} />
           </div>
           <div className="form-group">
             <label className="form-label">System Role</label>
@@ -1429,7 +1703,14 @@ const SettingsView = () => {
             </div>
           </div>
         </div>
-      </div>
+        
+        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+          <button type="submit" className="btn btn-primary" disabled={updating}>
+            {updating ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         <h3 style={{ fontWeight: 800, marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>Organization</h3>
@@ -1472,6 +1753,7 @@ const AppLayout = () => {
 
   const fetchInitialData = async () => {
     try {
+      // Background revalidation: fetch everything but don't show global spinner if we already have some data
       const [dash, rfps, tasks, notify] = await Promise.all([
         apiCall('/dashboard/executive', {}, token),
         apiCall('/rfps', {}, token),
@@ -1483,25 +1765,31 @@ const AppLayout = () => {
       setTasksData(tasks.tasks);
       setUnreadCount(notify.unreadCount || 0);
     } catch (error) {
-      console.error('Failed to pre-fetch data:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setDataLoading(false);
     }
   };
 
   const refreshDashboard = async () => {
-    const dash = await apiCall('/dashboard/executive', {}, token);
-    setDashboardData(dash);
+    try {
+      const dash = await apiCall('/dashboard/executive', {}, token);
+      setDashboardData(dash);
+    } catch (e) {}
   };
 
   const refreshRFPs = async () => {
-    const rfps = await apiCall('/rfps', {}, token);
-    setRfpsData(rfps.rfps);
+    try {
+      const rfps = await apiCall('/rfps', {}, token);
+      setRfpsData(rfps.rfps);
+    } catch (e) {}
   };
 
   const refreshTasks = async () => {
-    const tasks = await apiCall('/tasks', {}, token);
-    setTasksData(tasks.tasks);
+    try {
+      const tasks = await apiCall('/tasks', {}, token);
+      setTasksData(tasks.tasks);
+    } catch (e) {}
   };
 
   const navigation = [

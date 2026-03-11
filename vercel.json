@@ -12,7 +12,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "backend/**"
+      "includeFiles": "backend/controllers/**,backend/routes/**,backend/utils/**,backend/prisma/**,backend/server.js"
     }
   }
 }

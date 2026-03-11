@@ -15,7 +15,8 @@ datasource db {
 // ============================================
 
 enum UserRole {
-  PROPOSAL_MANAGER  // Admin - full access
+  ADMIN              // Master Admin - full access
+  PROPOSAL_MANAGER  // Manager - view their own
   SOLUTION_ARCHITECT // Contributor - assigned RFPs
   LEADERSHIP        // Executive - read-only
   BID_REVIEWER      // Approval role
@@ -55,6 +56,7 @@ enum RFPStatus {
   IN_PROGRESS
   REVIEW
   APPROVED
+  REJECTED
   SUBMITTED
   LOST
   WON
