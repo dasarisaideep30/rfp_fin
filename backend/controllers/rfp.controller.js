@@ -15,34 +15,36 @@ const getAllRFPs = async (req, res) => {
   try {
     const { status, riskLevel, search } = req.query;
     const userId = req.user.id;
-    let where = {};
+    const isAdmin = req.user.email === 'sarah.johnson@gmail.com';
     
-    // Only the master admin sees all RFPs
-    if (req.user.email !== 'sarah.johnson@gmail.com') {
-      // Everyone else only sees what they are assigned to or manage
-      where.OR = [
-        { proposalManagerId: userId },
-        { solutionArchitectId: userId }
-      ];
-    }
+    // Privacy conditions: strictly RFPs created by the user (proposalManagerId) unless Admin
+    const privacyConditions = isAdmin ? {} : { proposalManagerId: userId };
+    
+    // Build filter array for AND grouping
+    const filters = [privacyConditions];
 
-    // Apply filters
     if (status) {
-      where.status = status;
+      filters.push({ status });
     }
+    
     if (riskLevel) {
-      where.riskLevel = riskLevel;
+      filters.push({ riskLevel });
     }
+    
     if (search) {
-      where.OR = [
-        { clientName: { contains: search, mode: 'insensitive' } },
-        { rfpNumber: { contains: search, mode: 'insensitive' } },
-        { projectTitle: { contains: search, mode: 'insensitive' } }
-      ];
+      filters.push({
+        OR: [
+          { clientName: { contains: search, mode: 'insensitive' } },
+          { rfpNumber: { contains: search, mode: 'insensitive' } },
+          { projectTitle: { contains: search, mode: 'insensitive' } }
+        ]
+      });
     }
 
     const rfps = await prisma.rFP.findMany({
-      where,
+      where: {
+        AND: filters
+      },
       include: {
         proposalManager: {
           select: { id: true, firstName: true, lastName: true, email: true }

@@ -15,13 +15,8 @@ const getExecutiveDashboard = async (req, res) => {
     const userId = req.user.id;
     const isAdmin = req.user.email === 'sarah.johnson@gmail.com';
 
-    // Base filter for privacy
-    const privacyFilter = isAdmin ? {} : {
-      OR: [
-        { proposalManagerId: userId },
-        { solutionArchitectId: userId }
-      ]
-    };
+    // Base filter for privacy (Strictly RFPs created by me unless Admin)
+    const privacyFilter = isAdmin ? {} : { proposalManagerId: userId };
 
     // Total Active RFPs (all statuses except WON/LOST)
     const activeRFPs = await prisma.rFP.count({
