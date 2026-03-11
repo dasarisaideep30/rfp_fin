@@ -11,8 +11,6 @@
     }
   ],
   "functions": {
-    "api/index.js": {
-      "includeFiles": "backend/controllers/**,backend/routes/**,backend/utils/**,backend/prisma/**,backend/server.js"
-    }
+    "api/index.js": {}
   }
 }
