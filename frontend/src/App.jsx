@@ -14,7 +14,8 @@ import {
   Settings,
   Search,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Zap
 } from 'lucide-react';
 
 // API Configuration
