@@ -3,8 +3,7 @@
  * Manages approval workflows and Go/No-Go decisions
  */
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prismaClient');
 
 /**
  * Create approval request
