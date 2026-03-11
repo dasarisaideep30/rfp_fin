@@ -12,9 +12,21 @@ const prisma = new PrismaClient();
  */
 const getExecutiveDashboard = async (req, res) => {
   try {
+    const userId = req.user.id;
+    const isAdmin = req.user.email === 'sarah.johnson@gmail.com';
+
+    // Base filter for privacy
+    const privacyFilter = isAdmin ? {} : {
+      OR: [
+        { proposalManagerId: userId },
+        { solutionArchitectId: userId }
+      ]
+    };
+
     // Total Active RFPs (all statuses except WON/LOST)
     const activeRFPs = await prisma.rFP.count({
       where: {
+        ...privacyFilter,
         status: {
           notIn: ['WON', 'LOST', 'SUBMITTED']
         }
@@ -24,6 +36,7 @@ const getExecutiveDashboard = async (req, res) => {
     // RFPs at Risk (AMBER or RED)
     const rfpsAtRisk = await prisma.rFP.count({
       where: {
+        ...privacyFilter,
         riskLevel: {
           in: ['AMBER', 'RED']
         },
@@ -36,6 +49,7 @@ const getExecutiveDashboard = async (req, res) => {
     // Total Pipeline Value
     const pipelineValue = await prisma.rFP.aggregate({
       where: {
+        ...privacyFilter,
         status: {
           notIn: ['WON', 'LOST']
         }
@@ -115,6 +129,7 @@ const getExecutiveDashboard = async (req, res) => {
     const riskDistribution = await prisma.rFP.groupBy({
       by: ['riskLevel'],
       where: {
+        ...privacyFilter,
         status: {
           notIn: ['WON', 'LOST']
         }
@@ -139,6 +154,12 @@ const getExecutiveDashboard = async (req, res) => {
     // Recent Activity
     const recentActivity = await prisma.activityLog.findMany({
       take: 20,
+      where: isAdmin ? {} : {
+        OR: [
+          { userId: userId },
+          { rfp: privacyFilter }
+        ]
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         user: {
@@ -154,6 +175,7 @@ const getExecutiveDashboard = async (req, res) => {
     const statusCounts = await prisma.rFP.groupBy({
       by: ['status'],
       where: {
+        ...privacyFilter,
         status: {
           notIn: ['WON', 'LOST']
         }
