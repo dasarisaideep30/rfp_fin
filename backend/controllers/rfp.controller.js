@@ -15,14 +15,15 @@ const getAllRFPs = async (req, res) => {
   try {
     const { status, riskLevel, search } = req.query;
     const userId = req.user.id;
-    const userRole = req.user.role;
-
-    // Build filter based on role
     let where = {};
-
-    // Solution Architects only see assigned RFPs
-    if (userRole === 'SOLUTION_ARCHITECT') {
-      where.solutionArchitectId = userId;
+    
+    // Only the master admin sees all RFPs
+    if (req.user.email !== 'sarah.johnson@gmail.com') {
+      // Everyone else only sees what they are assigned to or manage
+      where.OR = [
+        { proposalManagerId: userId },
+        { solutionArchitectId: userId }
+      ];
     }
 
     // Apply filters

@@ -709,22 +709,6 @@ const RFPDetail = ({ rfpId, onBack }) => {
               </div>
             </div>
 
-            {/* AI Action Area */}
-            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(145deg, #1e1b4b, #312e81)', borderRadius: '0.75rem', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h4 style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.25rem' }}>✨</span> Enterprise AI Intelligence
-                </h4>
-                <p style={{ color: '#c7d2fe', fontSize: '0.9rem' }}>Automatically summarize large 150+ page documents, or elaborate short requests into full proposals.</p>
-              </div>
-              <button 
-                className="btn btn-primary" 
-                style={{ background: 'white', color: '#312e81', fontWeight: 800, border: 'none', padding: '0.75rem 1.5rem' }}
-                onClick={() => alert('AI Analysis requires an uploaded document buffer. This triggers the /api/ai/analyze-rfp endpoint using Gemini 1.5 Pro.')}
-              >
-                Analyze Document
-              </button>
-            </div>
           </div>
 
           {/* Tasks */}
@@ -891,6 +875,41 @@ const CreateRFPForm = ({ onCancel, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rawDocument, setRawDocument] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+
+  const handleAIGenerate = async () => {
+    if (!rawDocument.trim()) {
+      setError('Please provide raw document text to analyze.');
+      return;
+    }
+    
+    setAiGenerating(true);
+    setError('');
+    
+    try {
+      // In mock mode or real mode, hook up to backend
+      const response = await fetch(`${API_URL}/ai/analyze-rfp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ documentText: rawDocument })
+      });
+
+      if (!response.ok) {
+        throw new Error('AI Generation failed. Ensure Gemini API key is configured.');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, executiveSummary: data.result }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -971,16 +990,46 @@ const CreateRFPForm = ({ onCancel, onSuccess }) => {
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Executive Summary</label>
-          <textarea
-            name="executiveSummary"
-            className="form-textarea"
-            placeholder="Brief overview of the proposal..."
-            rows="4"
-            value={formData.executiveSummary}
-            onChange={handleChange}
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label className="form-label" style={{ margin: 0 }}>Raw Document / Context</label>
+            </div>
+            <textarea
+              className="form-textarea"
+              placeholder="Paste the 150-page RFP text here, or a short 5-page request..."
+              rows="8"
+              value={rawDocument}
+              onChange={(e) => setRawDocument(e.target.value)}
+              style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+            />
+            <button 
+              type="button" 
+              onClick={handleAIGenerate}
+              disabled={aiGenerating}
+              style={{ 
+                marginTop: '0.75rem', width: '100%', padding: '0.75rem', background: 'linear-gradient(145deg, #1e1b4b, #312e81)', 
+                color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 800, cursor: aiGenerating ? 'not-allowed' : 'pointer',
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
+              }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>✨</span>
+              {aiGenerating ? 'AI is analyzing document...' : 'AI Generate Summary'}
+            </button>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Executive Summary</label>
+            <textarea
+              name="executiveSummary"
+              className="form-textarea"
+              placeholder="The summarized (or elaborated) proposal will appear here..."
+              rows="10"
+              value={formData.executiveSummary}
+              onChange={handleChange}
+              style={{ height: 'calc(100% - 28px)' }}
+            />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
