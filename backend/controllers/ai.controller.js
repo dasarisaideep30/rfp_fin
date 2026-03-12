@@ -37,6 +37,7 @@ const analyzeRFP = async (req, res) => {
     }
 
     const client = new GoogleGenAI({ apiKey: aiKey });
+    console.log(`[AI] Attempting analysis with model: gemini-2.0-flash...`);
 
     const result = await client.models.generateContent({
       model: 'gemini-2.0-flash',
